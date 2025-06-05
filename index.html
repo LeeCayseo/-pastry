@@ -15,22 +15,29 @@
         display: block;
         z-index: 0;
       }
-      #switchBtn {
+      #switchBtn, #saveBtn {
         position: absolute;
         top: 10px;
-        left: 10px;
         z-index: 100;
         padding: 30px 25px;
         font-size: 16px;
         background: rgba(255, 255, 255, 0.9);
         border: none;
         border-radius: 8px;
+        cursor: pointer;
+      }
+      #switchBtn {
+        left: 10px;
         display: none;
+      }
+      #saveBtn {
+        right: 10px;
       }
     </style>
   </head>
   <body>
-    <button id="switchBtn">📷 카메라 전환</button>
+    <button id="switchBtn">카메라 전환</button>
+    <button id="saveBtn">저장</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script>
@@ -52,6 +59,12 @@
             switchCamera();
           });
         }
+
+        const saveBtn = document.getElementById("saveBtn");
+        saveBtn.addEventListener("click", () => {
+          // 현재 캔버스 이미지 저장 (png)
+          saveCanvas('webcam_snapshot', 'png');
+        });
 
         startCamera();
       }
@@ -130,9 +143,15 @@
       }
 
       function isOverButton(x, y) {
-        const btn = document.getElementById("switchBtn");
-        const rect = btn.getBoundingClientRect();
-        return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        const btnSwitch = document.getElementById("switchBtn");
+        const rectSwitch = btnSwitch.getBoundingClientRect();
+        if (x >= rectSwitch.left && x <= rectSwitch.right && y >= rectSwitch.top && y <= rectSwitch.bottom) return true;
+
+        const btnSave = document.getElementById("saveBtn");
+        const rectSave = btnSave.getBoundingClientRect();
+        if (x >= rectSave.left && x <= rectSave.right && y >= rectSave.top && y <= rectSave.bottom) return true;
+
+        return false;
       }
 
       function takeSnapshot() {
