@@ -133,17 +133,19 @@
       }
 
       function touchStarted(event) {
-        if (event.touches) {
-          for (let i = 0; i < event.touches.length; i++) {
-            let t = event.touches[i];
-            if (isOverButton(t.clientX, t.clientY)) {
-              return false; // 버튼 터치 시 스냅샷 막기
-            }
-          }
-        }
-        takeSnapshot();
-        return false;
+  if (event.touches) {
+    for (let i = 0; i < event.touches.length; i++) {
+      let t = event.touches[i];
+      if (isOverButton(t.clientX, t.clientY)) {
+        // 버튼 터치 시 스냅샷 막고, 이벤트는 막지 않음
+        return true; // 혹은 그냥 return;
       }
+    }
+  }
+  takeSnapshot();
+  return false; // 스냅샷 촬영 후 이벤트는 막아도 됨
+}
+
 
       function takeSnapshot() {
         const flippedX = isMobileDevice ? mouseX : width - mouseX;
