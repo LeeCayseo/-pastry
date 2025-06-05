@@ -41,7 +41,9 @@
       }
 
       function setup() {
-        createCanvas(windowWidth, windowHeight);
+        const canvas = createCanvas(windowWidth, windowHeight);
+        canvas.elt.style.pointerEvents = 'none'; // 👈 버튼 클릭 막지 않도록 설정
+
         isMobileDevice = isMobile();
         SNAP_SIZE = isMobileDevice ? 300 : 200;
 
