@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Webcam Snap Overlay</title>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <script>
+      let cam;
+      let snapshots = [];
+      const SNAP_SIZE = 100; // 500px은 너무 클 수 있어 줄였습니다. 필요시 수정 가능
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        cam = createCapture(VIDEO);
+        cam.size(windowWidth, windowHeight);
+        cam.hide();
+      }
+
+      function draw() {
+        image(cam, 0, 0, width, height);
+
+        for (let snap of snapshots) {
+          image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+          noFill();
+          stroke(255, 0, 0);
+          strokeWeight(2);
+          rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+        }
+      }
+
+      function mousePressed() {
+        // 웹캠 화면 상에서 500px 크기로 해당 위치를 캡처 (중앙 기준)
+        const sx = constrain(mouseX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
+        const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
+        const img = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
+
+        snapshots.push({ x: sx, y: sy, img });
+      }
+    </script>
+  </body>
+</html>
