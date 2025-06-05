@@ -13,11 +13,22 @@
     <script>
       let cam;
       let snapshots = [];
-      const SNAP_SIZE = 100; // 500px은 너무 클 수 있어 줄였습니다. 필요시 수정 가능
+      const SNAP_SIZE = 300; // 모바일 화면에 맞게 300으로 줄였습니다.
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
-        cam = createCapture(VIDEO);
+
+        // 모바일에서 후면 카메라 사용
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: { exact: "environment" }  // 후면 카메라 요청
+          }
+        };
+
+        cam = createCapture(constraints, function(stream) {
+          console.log("Camera initialized");
+        });
         cam.size(windowWidth, windowHeight);
         cam.hide();
       }
@@ -28,19 +39,18 @@
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
           noFill();
-          stroke(255, 0, 0);
+          stroke(255, 0, 255);
           strokeWeight(2);
           rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
         }
       }
 
-      function mousePressed() {
-        // 웹캠 화면 상에서 500px 크기로 해당 위치를 캡처 (중앙 기준)
+      function touchStarted() {
         const sx = constrain(mouseX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
         const img = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
-
         snapshots.push({ x: sx, y: sy, img });
+        return false; // 모바일 스크롤 방지
       }
     </script>
   </body>
