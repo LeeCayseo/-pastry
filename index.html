@@ -6,15 +6,29 @@
     <style>
       body { margin: 0; overflow: hidden; }
       canvas { display: block; }
+      #switchBtn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        padding: 10px 15px;
+        font-size: 16px;
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 8px;
+        display: none; /* 모바일에서만 보이게 */
+      }
     </style>
   </head>
   <body>
+    <button id="switchBtn">📷 카메라 전환</button>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script>
       let cam;
       let snapshots = [];
       let SNAP_SIZE;
       let isMobileDevice;
+      let facingMode = "environment"; // 기본은 후면
 
       function isMobile() {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -25,8 +39,21 @@
         isMobileDevice = isMobile();
         SNAP_SIZE = isMobileDevice ? 300 : 200;
 
+        if (isMobileDevice) {
+          document.getElementById("switchBtn").style.display = "block";
+          document.getElementById("switchBtn").addEventListener("click", switchCamera);
+        }
+
+        startCamera();
+      }
+
+      function startCamera() {
+        if (cam) {
+          cam.remove(); // 기존 캠 스트림 제거
+        }
+
         let constraints = isMobileDevice
-          ? { audio: false, video: { facingMode: { exact: "environment" } } }
+          ? { audio: false, video: { facingMode: { exact: facingMode } } }
           : { audio: false, video: true };
 
         cam = createCapture(constraints, () => console.log("Camera initialized"));
@@ -34,11 +61,15 @@
         cam.hide();
       }
 
+      function switchCamera() {
+        facingMode = (facingMode === "user") ? "environment" : "user";
+        startCamera(); // 카메라 다시 시작
+      }
+
       function draw() {
         if (isMobileDevice) {
           image(cam, 0, 0, width, height);
         } else {
-          // 데스크탑: 캠 영상 좌우 반전
           push();
           translate(width, 0);
           scale(-1, 1);
@@ -49,29 +80,24 @@
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
 
-          // 박스 스타일
           stroke(255, 255, 0);
           noFill();
           strokeWeight(2);
           rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
 
-          // 타임스탬프 표시
           const labelPadding = 4;
           const line1 = '빵이 구워진 시간:';
           const line2 = snap.timestamp;
 
           textSize(14);
           textLeading(16);
-
           let tw = max(textWidth(line1), textWidth(line2));
           let th = 36;
 
-          // 노란 배경 박스
           noStroke();
           fill(255, 255, 0);
           rect(snap.x, snap.y - th, tw + labelPadding * 2, th);
 
-          // 텍스트
           fill(139, 69, 19);
           textAlign(LEFT, TOP);
           text(line1 + '\n' + line2, snap.x + labelPadding, snap.y - th + 2);
@@ -96,10 +122,8 @@
         let finalImg;
 
         if (isMobileDevice) {
-          // 모바일: 좌우반전 안 함
           finalImg = raw;
         } else {
-          // 데스크탑: 좌우반전 수행
           let flipped = createImage(SNAP_SIZE, SNAP_SIZE);
           flipped.copy(raw, 0, 0, SNAP_SIZE, SNAP_SIZE, 0, 0, SNAP_SIZE, SNAP_SIZE);
           flipped.loadPixels();
