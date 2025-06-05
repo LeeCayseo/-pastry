@@ -21,7 +21,7 @@
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
-        SNAP_SIZE = isMobile() ? 300 : 100;
+        SNAP_SIZE = isMobile() ? 300 : 200;
 
         let constraints;
 
@@ -43,20 +43,44 @@
       }
 
       function draw() {
-        // 캠 영상 좌우 반전해서 출력
+        // 캠 영상 좌우 반전
         push();
         translate(width, 0);
         scale(-1, 1);
         image(cam, 0, 0, width, height);
         pop();
 
-        // 캡처된 반전 이미지 출력
+        // 캡처된 이미지 출력
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+
+          // 박스 스타일
+          stroke(255, 255, 0);
           noFill();
-          stroke(255, 0, 255);
           strokeWeight(2);
           rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+
+          // 타임스탬프 표시
+          const labelPadding = 4;
+          const line1 = '빵이 구워진 시간:';
+          const line2 = snap.timestamp;
+          const label = line1 + '\n' + line2;
+
+          textSize(14);
+          textLeading(16); // 줄 간격
+
+          let tw = max(textWidth(line1), textWidth(line2));
+          let th = 36; // 두 줄 높이
+
+          // 노란 배경 박스
+          noStroke();
+          fill(255, 255, 0);
+          rect(snap.x, snap.y - th, tw + labelPadding * 2, th);
+
+          // 텍스트
+          fill(139, 69, 19);
+          textAlign(LEFT, TOP);
+          text(label, snap.x + labelPadding, snap.y - th + 2);
         }
       }
 
@@ -70,15 +94,12 @@
       }
 
       function takeSnapshot() {
-        // 반전된 화면 기준 캡처 좌표
         const flippedX = width - mouseX;
         const sx = constrain(flippedX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
 
-        // 원본에서 잘라온 이미지
         const raw = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
 
-        // 좌우 반전 처리
         let flipped = createImage(SNAP_SIZE, SNAP_SIZE);
         flipped.copy(raw, 0, 0, SNAP_SIZE, SNAP_SIZE, 0, 0, SNAP_SIZE, SNAP_SIZE);
         flipped.loadPixels();
@@ -94,8 +115,16 @@
         }
         flipped.updatePixels();
 
-        // 현재 보이는 위치 기준으로 출력
-        snapshots.push({ x: mouseX - SNAP_SIZE / 2, y: sy, img: flipped });
+        // 현재 날짜 및 시간 추가
+        const now = new Date();
+        const timestamp = now.getFullYear() + '-' +
+                          nf(now.getMonth() + 1, 2) + '-' +
+                          nf(now.getDate(), 2) + ' ' +
+                          nf(now.getHours(), 2) + ':' +
+                          nf(now.getMinutes(), 2) + ':' +
+                          nf(now.getSeconds(), 2);
+
+        snapshots.push({ x: mouseX - SNAP_SIZE / 2, y: sy, img: flipped, timestamp });
       }
     </script>
   </body>
