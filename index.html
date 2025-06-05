@@ -21,31 +21,23 @@
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
-
-        // 기기에 따라 SNAP_SIZE 설정
-        SNAP_SIZE = isMobile() ? 300 : 200;
+        SNAP_SIZE = isMobile() ? 300 : 100;
 
         let constraints;
 
         if (isMobile()) {
-          // 📱 모바일일 경우 후면 카메라
           constraints = {
             audio: false,
-            video: {
-              facingMode: { exact: "environment" }
-            }
+            video: { facingMode: { exact: "environment" } }
           };
         } else {
-          // 💻 PC 웹일 경우 기본 웹캠
           constraints = {
             audio: false,
             video: true
           };
         }
 
-        cam = createCapture(constraints, function(stream) {
-          console.log("Camera initialized");
-        });
+        cam = createCapture(constraints, () => console.log("Camera initialized"));
         cam.size(windowWidth, windowHeight);
         cam.hide();
       }
@@ -58,7 +50,7 @@
         image(cam, 0, 0, width, height);
         pop();
 
-        // 캡처된 스냅샷은 원래 방향대로 출력
+        // 캡처된 반전 이미지 출력
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
           noFill();
@@ -68,21 +60,42 @@
         }
       }
 
-      // 터치 또는 클릭 대응
       function mousePressed() {
         takeSnapshot();
       }
 
       function touchStarted() {
         takeSnapshot();
-        return false; // 모바일 스크롤 방지
+        return false;
       }
 
       function takeSnapshot() {
-        const sx = constrain(mouseX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
+        // 반전된 화면 기준 캡처 좌표
+        const flippedX = width - mouseX;
+        const sx = constrain(flippedX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
-        const img = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
-        snapshots.push({ x: sx, y: sy, img });
+
+        // 원본에서 잘라온 이미지
+        const raw = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
+
+        // 좌우 반전 처리
+        let flipped = createImage(SNAP_SIZE, SNAP_SIZE);
+        flipped.copy(raw, 0, 0, SNAP_SIZE, SNAP_SIZE, 0, 0, SNAP_SIZE, SNAP_SIZE);
+        flipped.loadPixels();
+        raw.loadPixels();
+        for (let y = 0; y < SNAP_SIZE; y++) {
+          for (let x = 0; x < SNAP_SIZE; x++) {
+            let i = 4 * (y * SNAP_SIZE + x);
+            let j = 4 * (y * SNAP_SIZE + (SNAP_SIZE - 1 - x));
+            for (let k = 0; k < 4; k++) {
+              flipped.pixels[i + k] = raw.pixels[j + k];
+            }
+          }
+        }
+        flipped.updatePixels();
+
+        // 현재 보이는 위치 기준으로 출력
+        snapshots.push({ x: mouseX - SNAP_SIZE / 2, y: sy, img: flipped });
       }
     </script>
   </body>
