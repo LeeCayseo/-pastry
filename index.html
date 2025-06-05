@@ -74,44 +74,44 @@
       }
 
       function draw() {
-  if (isMobileDevice) {
-    image(cam, 0, 0, width, height);
-  } else {
-    push();
-    translate(width, 0);
-    scale(-1, 1);
-    image(cam, 0, 0, width, height);
-    pop();
-  }
+        const shouldMirror = (!isMobileDevice) || (isMobileDevice && facingMode === "user");
 
-  for (let snap of snapshots) {
-    image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+        if (shouldMirror) {
+          push();
+          translate(width, 0);
+          scale(-1, 1);
+          image(cam, 0, 0, width, height);
+          pop();
+        } else {
+          image(cam, 0, 0, width, height);
+        }
 
-    stroke(255, 255, 0);
-    noFill();
-    strokeWeight(2);
-    rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
+        for (let snap of snapshots) {
+          image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
 
-    const labelPadding = 6;
-    const line1 = "빵이 구워진 시간:";
-    const line2 = snap.timestamp;
+          stroke(255, 255, 0);
+          noFill();
+          strokeWeight(2);
+          rect(snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
 
-    textSize(20);
-    textLeading(26);
-    const labelWidth = max(textWidth(line1), textWidth(line2));
-    const textHeight = 60; // 충분한 높이 확보 (2줄 기준)
+          const labelPadding = 6;
+          const line1 = "빵이 구워진 시간:";
+          const line2 = snap.timestamp;
 
-    // 노란 박스
-    noStroke();
-    fill(255, 255, 0);
-    rect(snap.x, snap.y - textHeight - 4, labelWidth + labelPadding * 2, textHeight);
+          textSize(20);
+          textLeading(26);
+          const labelWidth = max(textWidth(line1), textWidth(line2));
+          const textHeight = 60;
 
-    // 텍스트
-    fill(139, 69, 19);
-    textAlign(LEFT, TOP);
-    text(line1 + "\n" + line2, snap.x + labelPadding, snap.y - textHeight - 2);
-  }
-}
+          noStroke();
+          fill(255, 255, 0);
+          rect(snap.x, snap.y - textHeight - 4, labelWidth + labelPadding * 2, textHeight);
+
+          fill(139, 69, 19);
+          textAlign(LEFT, TOP);
+          text(line1 + "\n" + line2, snap.x + labelPadding, snap.y - textHeight - 2);
+        }
+      }
 
       function mousePressed(event) {
         if (!isOverButton(event.clientX, event.clientY)) {
@@ -136,14 +136,15 @@
       }
 
       function takeSnapshot() {
-        const camX = isMobileDevice ? mouseX : width - mouseX;
+        const shouldMirror = (!isMobileDevice) || (isMobileDevice && facingMode === "user");
+        const camX = shouldMirror ? width - mouseX : mouseX;
         const sx = constrain(camX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
         const raw = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
 
         let finalImg = raw;
 
-        if (!isMobileDevice) {
+        if (shouldMirror) {
           finalImg = createImage(SNAP_SIZE, SNAP_SIZE);
           raw.loadPixels();
           finalImg.loadPixels();
