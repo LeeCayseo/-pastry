@@ -82,14 +82,19 @@
         });
 
         const archiveBtn = document.getElementById("archiveBtn");
-        archiveBtn.addEventListener("click", () => {
+              archiveBtn.addEventListener("click", handleArchive);
+              archiveBtn.addEventListener("touchstart", handleArchive);
+
+        function handleArchive(e) {
+          e.preventDefault();
         const data = snapshots.map(s => ({
           timestamp: s.timestamp,
           img: s.img.canvas.toDataURL()
         }));
-      localStorage.setItem("snapshotArchive", JSON.stringify(data));
-      window.location.href = "archive.html"; // 별도 페이지로 이동
-      });
+        localStorage.setItem("snapshotArchive", JSON.stringify(data));
+        window.location.href = "archive.html";
+}
+
 
 
 
