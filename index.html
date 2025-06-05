@@ -41,8 +41,7 @@
       }
 
       function setup() {
-        const canvas = createCanvas(windowWidth, windowHeight);
-        canvas.elt.style.pointerEvents = 'none'; // 👈 버튼 클릭 막지 않도록 설정
+        createCanvas(windowWidth, windowHeight);
 
         isMobileDevice = isMobile();
         SNAP_SIZE = isMobileDevice ? 300 : 200;
@@ -50,7 +49,12 @@
         if (isMobileDevice) {
           const btn = document.getElementById("switchBtn");
           btn.style.display = "block";
-          btn.addEventListener("click", switchCamera);
+
+          // 버튼 클릭 시 이벤트 전파 차단
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            switchCamera();
+          });
         }
 
         startCamera();
@@ -113,11 +117,30 @@
         }
       }
 
-      function mousePressed() {
+      // 버튼 영역 클릭 체크 함수
+      function isOverButton(x, y) {
+        const btn = document.getElementById("switchBtn");
+        const rect = btn.getBoundingClientRect();
+        return (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom);
+      }
+
+      function mousePressed(event) {
+        if (isOverButton(event.clientX, event.clientY)) {
+          // 버튼 클릭 시 스냅샷 찍지 않음
+          return;
+        }
         takeSnapshot();
       }
 
-      function touchStarted() {
+      function touchStarted(event) {
+        if (event.touches) {
+          for (let i = 0; i < event.touches.length; i++) {
+            let t = event.touches[i];
+            if (isOverButton(t.clientX, t.clientY)) {
+              return false; // 버튼 터치 시 스냅샷 막기
+            }
+          }
+        }
         takeSnapshot();
         return false;
       }
