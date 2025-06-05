@@ -14,6 +14,7 @@
       let cam;
       let snapshots = [];
       let SNAP_SIZE;
+      let isMobileDevice;
 
       function isMobile() {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -21,21 +22,12 @@
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
-        SNAP_SIZE = isMobile() ? 300 : 200;
+        isMobileDevice = isMobile();
+        SNAP_SIZE = isMobileDevice ? 300 : 200;
 
-        let constraints;
-
-        if (isMobile()) {
-          constraints = {
-            audio: false,
-            video: { facingMode: { exact: "environment" } }
-          };
-        } else {
-          constraints = {
-            audio: false,
-            video: true
-          };
-        }
+        let constraints = isMobileDevice
+          ? { audio: false, video: { facingMode: { exact: "environment" } } }
+          : { audio: false, video: true };
 
         cam = createCapture(constraints, () => console.log("Camera initialized"));
         cam.size(windowWidth, windowHeight);
@@ -43,14 +35,17 @@
       }
 
       function draw() {
-        // 캠 영상 좌우 반전
-        push();
-        translate(width, 0);
-        scale(-1, 1);
-        image(cam, 0, 0, width, height);
-        pop();
+        if (isMobileDevice) {
+          image(cam, 0, 0, width, height);
+        } else {
+          // 데스크탑: 캠 영상 좌우 반전
+          push();
+          translate(width, 0);
+          scale(-1, 1);
+          image(cam, 0, 0, width, height);
+          pop();
+        }
 
-        // 캡처된 이미지 출력
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
 
@@ -64,13 +59,12 @@
           const labelPadding = 4;
           const line1 = '빵이 구워진 시간:';
           const line2 = snap.timestamp;
-          const label = line1 + '\n' + line2;
 
           textSize(14);
-          textLeading(16); // 줄 간격
+          textLeading(16);
 
           let tw = max(textWidth(line1), textWidth(line2));
-          let th = 36; // 두 줄 높이
+          let th = 36;
 
           // 노란 배경 박스
           noStroke();
@@ -80,7 +74,7 @@
           // 텍스트
           fill(139, 69, 19);
           textAlign(LEFT, TOP);
-          text(label, snap.x + labelPadding, snap.y - th + 2);
+          text(line1 + '\n' + line2, snap.x + labelPadding, snap.y - th + 2);
         }
       }
 
@@ -94,28 +88,35 @@
       }
 
       function takeSnapshot() {
-        const flippedX = width - mouseX;
+        const flippedX = isMobileDevice ? mouseX : width - mouseX;
         const sx = constrain(flippedX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
-
         const raw = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
 
-        let flipped = createImage(SNAP_SIZE, SNAP_SIZE);
-        flipped.copy(raw, 0, 0, SNAP_SIZE, SNAP_SIZE, 0, 0, SNAP_SIZE, SNAP_SIZE);
-        flipped.loadPixels();
-        raw.loadPixels();
-        for (let y = 0; y < SNAP_SIZE; y++) {
-          for (let x = 0; x < SNAP_SIZE; x++) {
-            let i = 4 * (y * SNAP_SIZE + x);
-            let j = 4 * (y * SNAP_SIZE + (SNAP_SIZE - 1 - x));
-            for (let k = 0; k < 4; k++) {
-              flipped.pixels[i + k] = raw.pixels[j + k];
+        let finalImg;
+
+        if (isMobileDevice) {
+          // 모바일: 좌우반전 안 함
+          finalImg = raw;
+        } else {
+          // 데스크탑: 좌우반전 수행
+          let flipped = createImage(SNAP_SIZE, SNAP_SIZE);
+          flipped.copy(raw, 0, 0, SNAP_SIZE, SNAP_SIZE, 0, 0, SNAP_SIZE, SNAP_SIZE);
+          flipped.loadPixels();
+          raw.loadPixels();
+          for (let y = 0; y < SNAP_SIZE; y++) {
+            for (let x = 0; x < SNAP_SIZE; x++) {
+              let i = 4 * (y * SNAP_SIZE + x);
+              let j = 4 * (y * SNAP_SIZE + (SNAP_SIZE - 1 - x));
+              for (let k = 0; k < 4; k++) {
+                flipped.pixels[i + k] = raw.pixels[j + k];
+              }
             }
           }
+          flipped.updatePixels();
+          finalImg = flipped;
         }
-        flipped.updatePixels();
 
-        // 현재 날짜 및 시간 추가
         const now = new Date();
         const timestamp = now.getFullYear() + '-' +
                           nf(now.getMonth() + 1, 2) + '-' +
@@ -124,7 +125,12 @@
                           nf(now.getMinutes(), 2) + ':' +
                           nf(now.getSeconds(), 2);
 
-        snapshots.push({ x: mouseX - SNAP_SIZE / 2, y: sy, img: flipped, timestamp });
+        snapshots.push({
+          x: mouseX - SNAP_SIZE / 2,
+          y: sy,
+          img: finalImg,
+          timestamp
+        });
       }
     </script>
   </body>
