@@ -13,18 +13,35 @@
     <script>
       let cam;
       let snapshots = [];
-      const SNAP_SIZE = 300; // 모바일 화면에 맞게 300으로 줄였습니다.
+      let SNAP_SIZE;
+
+      function isMobile() {
+        return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      }
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
 
-        // 모바일에서 후면 카메라 사용
-        const constraints = {
-          audio: false,
-          video: {
-            facingMode: { exact: "environment" }  // 후면 카메라 요청
-          }
-        };
+        // 기기에 따라 SNAP_SIZE 설정
+        SNAP_SIZE = isMobile() ? 300 : 200;
+
+        let constraints;
+
+        if (isMobile()) {
+          // 📱 모바일일 경우 후면 카메라
+          constraints = {
+            audio: false,
+            video: {
+              facingMode: { exact: "environment" }
+            }
+          };
+        } else {
+          // 💻 PC 웹일 경우 기본 웹캠
+          constraints = {
+            audio: false,
+            video: true
+          };
+        }
 
         cam = createCapture(constraints, function(stream) {
           console.log("Camera initialized");
@@ -34,8 +51,14 @@
       }
 
       function draw() {
+        // 캠 영상 좌우 반전해서 출력
+        push();
+        translate(width, 0);
+        scale(-1, 1);
         image(cam, 0, 0, width, height);
+        pop();
 
+        // 캡처된 스냅샷은 원래 방향대로 출력
         for (let snap of snapshots) {
           image(snap.img, snap.x, snap.y, SNAP_SIZE, SNAP_SIZE);
           noFill();
@@ -45,12 +68,21 @@
         }
       }
 
+      // 터치 또는 클릭 대응
+      function mousePressed() {
+        takeSnapshot();
+      }
+
       function touchStarted() {
+        takeSnapshot();
+        return false; // 모바일 스크롤 방지
+      }
+
+      function takeSnapshot() {
         const sx = constrain(mouseX - SNAP_SIZE / 2, 0, width - SNAP_SIZE);
         const sy = constrain(mouseY - SNAP_SIZE / 2, 0, height - SNAP_SIZE);
         const img = cam.get(sx, sy, SNAP_SIZE, SNAP_SIZE);
         snapshots.push({ x: sx, y: sy, img });
-        return false; // 모바일 스크롤 방지
       }
     </script>
   </body>
