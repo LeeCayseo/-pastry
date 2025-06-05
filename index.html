@@ -33,11 +33,26 @@
       #saveBtn {
         right: 10px;
       }
+      #archiveBtn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 100;
+        padding: 30px 25px;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+
     </style>
   </head>
   <body>
     <button id="switchBtn">카메라 전환</button>
     <button id="saveBtn">저장</button>
+    <button id="archiveBtn">아카이브 보기</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
     <script>
@@ -65,6 +80,18 @@
           // 현재 캔버스 이미지 저장 (png)
           saveCanvas('webcam_snapshot', 'png');
         });
+
+        const archiveBtn = document.getElementById("archiveBtn");
+        archiveBtn.addEventListener("click", () => {
+        const data = snapshots.map(s => ({
+          timestamp: s.timestamp,
+          img: s.img.canvas.toDataURL()
+        }));
+      localStorage.setItem("snapshotArchive", JSON.stringify(data));
+      window.location.href = "archive.html"; // 별도 페이지로 이동
+      });
+
+
 
         startCamera();
       }

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snapshot Archive</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #fefefe;
+      padding: 20px;
+    }
+    .snapshot {
+      margin-bottom: 20px;
+    }
+    img {
+      border: 2px solid #ccc;
+      display: block;
+      margin-bottom: 6px;
+      max-width: 100%;
+      height: auto;
+    }
+    .timestamp {
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>스냅샷 아카이브</h1>
+  <div id="archiveContainer"></div>
+
+  <script>
+    const container = document.getElementById("archiveContainer");
+    const data = JSON.parse(localStorage.getItem("snapshotArchive") || "[]");
+
+    for (let snap of data) {
+      const div = document.createElement("div");
+      div.className = "snapshot";
+
+      const img = document.createElement("img");
+      img.src = snap.img;
+
+      const time = document.createElement("div");
+      time.className = "timestamp";
+      time.textContent = snap.timestamp;
+
+      div.appendChild(img);
+      div.appendChild(time);
+      container.appendChild(div);
+    }
+  </script>
+</body>
+</html>
