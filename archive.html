@@ -4,7 +4,12 @@
   <meta charset="UTF-8" />
   <title>Snapshot Stack</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: sans-serif;
       background: #f0f0f0;
@@ -21,8 +26,8 @@
 
     .card-stack {
       position: relative;
-      width: 300px;
-      height: 500px;
+      width: 500px;
+      height: 500px; /* 정사각형 */
       perspective: 1000px;
       touch-action: pan-y;
     }
@@ -33,31 +38,32 @@
       height: 100%;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
       background: white;
       transition: transform 0.3s ease, opacity 0.3s ease;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       cursor: grab;
+      touch-action: none; /* ← 중요 */
     }
 
     .card img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover; /* 이미지가 카드 안에 꽉 차도록 */
     }
 
     .timestamp {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
       padding: 12px;
-      background: #f5f5f5;
+      background: rgba(255, 255, 255, 0.85);
       text-align: center;
       font-weight: bold;
       color: #444;
     }
-
-    .card:nth-child(1) { z-index: 3; transform: translateX(0px) scale(1); }
-    .card:nth-child(2) { z-index: 2; transform: translateX(10px) scale(0.97); }
-    .card:nth-child(3) { z-index: 1; transform: translateX(20px) scale(0.94); }
   </style>
 </head>
 <body>
@@ -70,40 +76,55 @@
 
     let currentIndex = 0;
 
-    // 카드 3장만 보여주되 무한 반복용
     function renderCards() {
-      stack.innerHTML = ''; // 초기화
+      stack.innerHTML = '';
+
       for (let i = 0; i < 3; i++) {
+        if (snapshots.length === 0) break;
+
         const realIndex = (currentIndex + i) % snapshots.length;
         const snap = snapshots[realIndex];
+
         const card = document.createElement("div");
         card.className = "card";
+
+        const randomRotate = (Math.random() * 10 - 5).toFixed(2);
+        card.style.transform = `translateX(${i * 10}px) scale(${1 - i * 0.03}) rotate(${randomRotate}deg)`;
+        card.style.zIndex = 3 - i;
+
         card.innerHTML = `
           <img src="${snap.img}" alt="snapshot" />
           <div class="timestamp">${snap.timestamp}</div>
         `;
-        stack.appendChild(card);
-      }
 
-      attachSwipeListener();
+        stack.appendChild(card);
+
+        if (i === 0) {
+          attachSwipeListener(card);
+        }
+      }
     }
 
-    function attachSwipeListener() {
-      const topCard = stack.querySelector(".card");
+    function attachSwipeListener(card) {
+      if (!card) return;
 
       let startX = 0;
       let currentX = 0;
       let dragging = false;
 
-      topCard.addEventListener("mousedown", startDrag);
-      topCard.addEventListener("touchstart", startDrag);
+      card.style.transition = '';
+
+      card.addEventListener("mousedown", startDrag);
+      card.addEventListener("touchstart", startDrag, { passive: false });
 
       function startDrag(e) {
+        e.preventDefault(); // ← 중요
         dragging = true;
         startX = e.touches ? e.touches[0].clientX : e.clientX;
+
         document.addEventListener("mousemove", onDrag);
         document.addEventListener("mouseup", endDrag);
-        document.addEventListener("touchmove", onDrag);
+        document.addEventListener("touchmove", onDrag, { passive: false });
         document.addEventListener("touchend", endDrag);
       }
 
@@ -111,22 +132,23 @@
         if (!dragging) return;
         currentX = e.touches ? e.touches[0].clientX : e.clientX;
         const deltaX = currentX - startX;
-        topCard.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 20}deg)`;
+        card.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 20}deg)`;
       }
 
-      function endDrag(e) {
+      function endDrag() {
         dragging = false;
         const deltaX = currentX - startX;
+
         if (Math.abs(deltaX) > 100) {
-          topCard.style.transition = 'transform 0.3s ease';
-          topCard.style.transform = `translateX(${deltaX > 0 ? 500 : -500}px) rotate(${deltaX / 10}deg)`;
+          card.style.transition = 'transform 0.3s ease';
+          card.style.transform = `translateX(${deltaX > 0 ? 500 : -500}px) rotate(${deltaX / 10}deg)`;
           setTimeout(() => {
             currentIndex = (currentIndex + 1) % snapshots.length;
             renderCards();
           }, 300);
         } else {
-          topCard.style.transition = 'transform 0.2s ease';
-          topCard.style.transform = `translateX(0px) rotate(0deg)`;
+          card.style.transition = 'transform 0.2s ease';
+          card.style.transform = `translateX(0px) rotate(0deg)`;
         }
 
         document.removeEventListener("mousemove", onDrag);
@@ -136,7 +158,6 @@
       }
     }
 
-    // 초기 실행
     if (snapshots.length > 0) {
       renderCards();
     } else {
