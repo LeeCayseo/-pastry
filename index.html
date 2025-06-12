@@ -7,7 +7,7 @@
       body {
         margin: 0;
         overflow: hidden;
-        font-family: 'GrandifloraOne', sans-serif;
+      
       }
 
       canvas {
@@ -19,29 +19,10 @@
       }
 
       button {
-        font-family: 'GrandifloraOne', sans-serif;
+      
       }
 
-      #topText, #bottomText {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      font-size: 30px;
-      color: #ff0;
-      text-shadow: 2px 2px 4px #000;
-      font-family: 'bmk', sans-serif;
-      z-index: 50;
-      pointer-events: none; /* 클릭 이벤트 방해 안 하도록 */
-      }
-
-#topText {
-  top: 20px;
-}
-
-#bottomText {
-  bottom: 20px;
-}
-
+  
 
       #switchBtn, #saveBtn {
         position: absolute;
@@ -77,27 +58,13 @@
         border: none;
         border-radius: 8px;
         cursor: pointer;
-        font-family: 'GrandifloraOne', sans-serif;
+      
       }
 
-      @font-face {
-        font-family: 'GrandifloraOne';
-        src: url('fonts/ARCH.ttf') format('truetype');
-        font-weight: normal;
-        font-style: normal;
-      }
-      @font-face {
-        font-family: 'bmk';
-        src: url('fonts/BMKkubulim.ttf') format('truetype');
-        font-weight: normal;
-        font-style: normal;
-      }
+     
     </style>
   </head>
   <body>
-    <div id="topText">Time Pastry</div>
-    <div id="bottomText">타임 페스츄리</div>
-
     <button id="switchBtn">카메라 전환</button>
     <button id="saveBtn">빵 굽기</button>
     <button id="archiveBtn">아카이브 보기</button>
@@ -110,15 +77,12 @@
       let cam;
       let snapshots = [];
       let facingMode = "environment";
-      let customFont;
 
-      function preload() {
-        customFont = loadFont('fonts/park.ttf');
-      }
+  
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
-        textFont(customFont);
+  
 
         if (isMobileDevice) {
           const btn = document.getElementById("switchBtn");
