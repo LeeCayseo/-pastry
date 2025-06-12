@@ -7,7 +7,9 @@
       body {
         margin: 0;
         overflow: hidden;
+        font-family: 'GrandifloraOne', sans-serif;
       }
+
       canvas {
         position: absolute;
         top: 0;
@@ -15,43 +17,89 @@
         display: block;
         z-index: 0;
       }
+
+      button {
+        font-family: 'GrandifloraOne', sans-serif;
+      }
+
+      #topText, #bottomText {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 30px;
+      color: #ff0;
+      text-shadow: 2px 2px 4px #000;
+      font-family: 'bmk', sans-serif;
+      z-index: 50;
+      pointer-events: none; /* 클릭 이벤트 방해 안 하도록 */
+      }
+
+#topText {
+  top: 20px;
+}
+
+#bottomText {
+  bottom: 20px;
+}
+
+
       #switchBtn, #saveBtn {
         position: absolute;
         top: 10px;
         z-index: 100;
         padding: 30px 25px;
-        font-size: 16px;
-        background: rgba(255, 255, 255, 0.9);
+        font-size: 30px;
+        color: #ff0;
+        background: none;
         border: none;
         border-radius: 8px;
         cursor: pointer;
       }
+
       #switchBtn {
         left: 10px;
         display: none;
       }
+
       #saveBtn {
         right: 10px;
       }
+
       #archiveBtn {
         position: absolute;
         bottom: 10px;
         right: 10px;
         z-index: 100;
         padding: 30px 25px;
-        font-size: 16px;
-        background: rgba(255, 255, 255, 0.9);
+        font-size: 30px;
+        color: #ff0;
+        background: none;
         border: none;
         border-radius: 8px;
         cursor: pointer;
+        font-family: 'GrandifloraOne', sans-serif;
       }
 
-
+      @font-face {
+        font-family: 'GrandifloraOne';
+        src: url('fonts/ARCH.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'bmk';
+        src: url('fonts/BMKkubulim.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
     </style>
   </head>
   <body>
+    <div id="topText">Time Pastry</div>
+    <div id="bottomText">타임 페스츄리</div>
+
     <button id="switchBtn">카메라 전환</button>
-    <button id="saveBtn">저장</button>
+    <button id="saveBtn">빵 굽기</button>
     <button id="archiveBtn">아카이브 보기</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
@@ -62,9 +110,15 @@
       let cam;
       let snapshots = [];
       let facingMode = "environment";
+      let customFont;
+
+      function preload() {
+        customFont = loadFont('fonts/park.ttf');
+      }
 
       function setup() {
         createCanvas(windowWidth, windowHeight);
+        textFont(customFont);
 
         if (isMobileDevice) {
           const btn = document.getElementById("switchBtn");
@@ -77,26 +131,24 @@
 
         const saveBtn = document.getElementById("saveBtn");
         saveBtn.addEventListener("click", () => {
-          // 현재 캔버스 이미지 저장 (png)
-          saveCanvas('webcam_snapshot', 'png');
+          const now = new Date();
+          const filename = `Pastry 제조일자_${now.getFullYear()}-${nf(now.getMonth() + 1, 2)}-${nf(now.getDate(), 2)}_${nf(now.getHours(), 2)}-${nf(now.getMinutes(), 2)}-${nf(now.getSeconds(), 2)}`;
+          saveCanvas(filename, 'png');
         });
 
         const archiveBtn = document.getElementById("archiveBtn");
-              archiveBtn.addEventListener("click", handleArchive);
-              archiveBtn.addEventListener("touchstart", handleArchive);
+        archiveBtn.addEventListener("click", handleArchive);
+        archiveBtn.addEventListener("touchstart", handleArchive);
 
         function handleArchive(e) {
           e.preventDefault();
-        const data = snapshots.map(s => ({
-          timestamp: s.timestamp,
-          img: s.img.canvas.toDataURL()
-        }));
-        localStorage.setItem("snapshotArchive", JSON.stringify(data));
-        window.location.href = "archive.html";
-}
-
-
-
+          const data = snapshots.map(s => ({
+            timestamp: s.timestamp,
+            img: s.img.canvas.toDataURL()
+          }));
+          localStorage.setItem("snapshotArchive", JSON.stringify(data));
+          window.location.href = "archive.html";
+        }
 
         startCamera();
       }
@@ -143,6 +195,7 @@
           const line1 = "빵이 구워진 시간:";
           const line2 = snap.timestamp;
 
+          textFont(customFont);
           textSize(20);
           textLeading(26);
           const labelWidth = max(textWidth(line1), textWidth(line2));
